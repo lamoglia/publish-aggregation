@@ -116,4 +116,4 @@ The resulting collection (messagecounts) will have the following format at mini 
 }
 ```
 
-If no messages are sent within an hour, the counter will eventually get down to zero.
+If no new messages are sent within 24 hours, the counter will eventually get down to zero.
