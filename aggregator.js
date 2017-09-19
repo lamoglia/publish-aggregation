@@ -33,20 +33,21 @@ buildAggregator = (collection, pipelineCreator, options) => function() {
   const currentOptions = _.extendOwn(defaultOptions, options);
 
   const pipeline = pipelineCreator();
+  const hashToOidMap = {};
+  const published = {};
+  const rawCollection = collection.rawCollection();
+  const aggregateQuery = Meteor.wrapAsync(rawCollection.aggregate, rawCollection);
+  
   let ready = false;
   let interval = false;
   let oldestDocument = false;
-  const hashToOidMap = {};
-  const published = {};
   let matchStage = false;
-  const rawCollection = collection.rawCollection();
-  const aggregateQuery = Meteor.wrapAsync(rawCollection.aggregate, rawCollection);
 
   if (currentOptions.pastPeriod) {
     matchStage = getPipelineMatchStage(pipeline);
     if (!matchStage) {
-      matchStage = { '$match': { } };
-      pipeline.push(matchStage);
+      pipeline.splice(0, 0, { $match: { } });
+      matchStage = getPipelineMatchStage(pipeline);
     }
   }
 
@@ -57,7 +58,7 @@ buildAggregator = (collection, pipelineCreator, options) => function() {
   let update = () => {
     const { collectionName, transform, pastPeriod, singleValueField } = currentOptions;
 
-    if (pastPeriod.millis) {
+    if (pastPeriod) {
       matchStage.$match[pastPeriod.field] = { $gt: new Date(Date.now() - pastPeriod.millis) };
     }
     const results = aggregateQuery(pipeline);

@@ -33,7 +33,7 @@ Now your Mini Mongo will receive live updates from the server with your aggregat
 ### Parameters
 
 - **collection**: *Mongo.Collection* - The collection to extract the data from.
-- **pipelineCreator**: *Function* - Function that returns the pipeline for the aggregation query. It is a function instead of a simple array so it is possible to provide dynamic parameters such as the current logged user (`Meteor.userId()`)
+- **pipelineCreator**: *Function* - Function that returns the pipeline for the aggregation query. It is a function instead of a simple array so it is possible to provide dynamic parameters such as the current logged user (`Meteor.userId()`). For more info about aggregation pipelines, see [MongoDB docs](https://docs.mongodb.com/manual/core/aggregation-pipeline/).
 - **options**: *Object* - An optional object with options, as described below:
 
 #### Options
@@ -42,7 +42,7 @@ The `options` object has the following properties:
 
 - **collectionName**: *String* - The name of the collection under which the results will appear on MiniMongo. If not set, it will default to the provided collection name.
 - **transform**: *Function* - Transformation function that receives each document from the aggregation result and outputs a reshaped object. Set false if no transformation is required.
-- **singleValueField**: *String* - If you are publishing a result with a single changing field like a count or sum, provide the name of this field for improved performance. If your aggregation pipeline returns only one field other than the aggregation _id, it will be used by default.
+- **singleValueField**: *String* - If you are publishing a result with a single changing field like a count or sum, provide the name of this field for improved performance: changes will be published only if this specific field is modified. If your aggregation pipeline returns only one field other than the aggregation _id, it will be used by default.
 - **pastPeriod**: *Object* - Object with the following properties:
  - **field**: *String* - The ISODate field name from the collection.
  - **millis**: *Number* - Number of milliseconds from now to filter the results. Example: if you want only the documents with the field timestamp with values at most one hour from now, set "pastPeriod.field" to "timestamp" and "pastPeriod.millis" to 3600000.
