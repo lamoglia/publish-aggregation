@@ -20,7 +20,7 @@ const getPipelineMatchStage = (pipeline) => {
   return false;
 };
 
-buildAggregator = (collection, pipeline, options) => function() {
+buildAggregator = (collection, pipelineCreator, options) => function() {
   const self = this;
 
   const defaultOptions = {
@@ -30,8 +30,9 @@ buildAggregator = (collection, pipeline, options) => function() {
     pastPeriod: false,
     rateLimitMillis: 500,
   };
-  const currentOptions = _.extend(defaultOptions, options);
+  const currentOptions = _.extendOwn(defaultOptions, options);
 
+  const pipeline = pipelineCreator();
   let ready = false;
   let interval = false;
   let oldestDocument = false;
@@ -54,10 +55,10 @@ buildAggregator = (collection, pipeline, options) => function() {
   }
 
   let update = () => {
-    const { collectionName, transform } = currentOptions;
+    const { collectionName, transform, pastPeriod, singleValueField } = currentOptions;
 
-    if (currentOptions.pastPeriod.millis) {
-      matchStage.$match[currentOptions.pastPeriod.field] = { $gt: new Date(Date.now() - currentOptions.pastPeriod.millis) };
+    if (pastPeriod.millis) {
+      matchStage.$match[pastPeriod.field] = { $gt: new Date(Date.now() - pastPeriod.millis) };
     }
     const results = aggregateQuery(pipeline);
     const resultOids = [];
@@ -67,14 +68,20 @@ buildAggregator = (collection, pipeline, options) => function() {
       const transformedDocument = transform ? transform(doc) : doc;
 
       if (published[oid]) {
-        if (currentOptions.singleValueField && published[oid] !== doc[currentOptions.singleValueField]) {
-          self.changed(collectionName, oid, transformedDocument);
-          published[oid] = doc[currentOptions.singleValueField];
+        if (singleValueField) {
+          if (published[oid] !== doc[singleValueField]) {
+            self.changed(collectionName, oid, transformedDocument);
+            published[oid] = doc[singleValueField];
+          }
+        } else {
+          published[oid] = true;
         }
       } else {
         self.added(collectionName, oid, transformedDocument);
-        if (currentOptions.singleValueField) {
-          published[oid] = doc[currentOptions.singleValueField];
+        if (singleValueField) {
+          published[oid] = doc[singleValueField];
+        } else {
+          published[oid] = true;
         }
       }
     });
@@ -111,7 +118,7 @@ buildAggregator = (collection, pipeline, options) => function() {
     }
 
     if (oldestDocument) {
-      const nextUpdate = currentOptions.pastPeriod.millis - (currentTime.getTime() - oldestDocument.timestamp.getTime());
+      const nextUpdate = currentOptions.pastPeriod.millis - (currentTime.getTime() - oldestDocument[currentOptions.pastPeriod.field].getTime());
       interval = Meteor.setTimeout(() => {
         update();
         updateTimeout();
@@ -124,7 +131,7 @@ buildAggregator = (collection, pipeline, options) => function() {
       if (!ready) {
         return;
       }
-      if (currentOptions.pastPeriod && ((Date.now() - doc.timestamp.getTime()) > currentOptions.pastPeriod.millis)) {
+      if (currentOptions.pastPeriod && ((Date.now() - doc[currentOptions.pastPeriod.field].getTime()) > currentOptions.pastPeriod.millis)) {
         return;
       }
       if (currentOptions.pastPeriod && (!oldestDocument || (doc[currentOptions.pastPeriod.field] < oldestDocument[currentOptions.pastPeriod.field]))) {

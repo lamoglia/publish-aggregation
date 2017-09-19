@@ -1,7 +1,7 @@
 Package.describe({
   name: 'lamoglia:publish-aggregation',
   version: '0.0.1',
-  summary: 'Easily publish collection aggregations and "last period" aggregations.',
+  summary: 'Easily publish collection aggregations.',
   git: 'https://github.com/lamoglia/publish-aggregation',
   documentation: 'README.md'
 });
