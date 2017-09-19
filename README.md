@@ -91,7 +91,7 @@ const options = {
   transform: (doc) => ({ ...doc, sender_id: doc._id.sender_id }),
   singleValueField: 'count',
   pastPeriod: {
-    millis: 60 * 60 * 1000,
+    millis: 24 * 60 * 60 * 1000,
     field: 'sent_at',
   },
 };
