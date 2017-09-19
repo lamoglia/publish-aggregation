@@ -45,7 +45,7 @@ The `options` object has the following properties:
 - **singleValueField**: *String* - If you are publishing a result with a single changing field like a count or sum, provide the name of this field for improved performance. If your aggregation pipeline returns only one field other than the aggregation _id, it will be used by default.
 - **pastPeriod**: *Object* - Object with the following properties:
  - **field**: *String* - The ISODate field name from the collection.
- - **millis**: *Number* - Number of milliseconds from now to filter the results. Example: if you want only the documents with the field timestamp with values at most one hour from now, set "pastPeriod.field" to "timestamp" and "pastPeriod.millis" to "3600000".
+ - **millis**: *Number* - Number of milliseconds from now to filter the results. Example: if you want only the documents with the field timestamp with values at most one hour from now, set "pastPeriod.field" to "timestamp" and "pastPeriod.millis" to 3600000.
 - **rateLimitMillis**: *Number* - Value representing the maximum frequency of execution of the aggregation query, in milliseconds. If you possibly have many changes in the aggregated collection, it is best to provide a rate limit to avoid the query being run more times than your user can see the changes on screen. Set 0 to disable rate limiting.
 
 You should set the **pastPeriod** property only if you want to filter the collection's documents by some (ISODate) field within the last N milliseconds. Common use cases: "Publish the number of messages by sender received in the last 24h", "Publish the sum of 'critical' alerts started in the last hour". If isn't set, no filtering will be done.
