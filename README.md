@@ -74,7 +74,7 @@ Given a `Messages` collection in the following format
 }
 ```
 
-To publish a collection with the number of messages received in the last day grouped by sender:
+To publish a collection with the number of messages received in the past 24 hours grouped by sender:
 
 ```javascript
 import { Meteor } from 'meteor/meteor';
