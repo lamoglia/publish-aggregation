@@ -31,7 +31,7 @@ buildAggregator = (collection, pipelineCreator, options) => function() {
     pastPeriod: false,
     rateLimitMillis: 500,
   };
-  const currentOptions = _.extendOwn(defaultOptions, options);
+  const currentOptions = _.assign(defaultOptions, options);
 
   const pipeline = pipelineCreator();
   const hashToOidMap = {};
