@@ -25,6 +25,7 @@ buildAggregator = (collection, pipelineCreator, options) => function() {
 
   const defaultOptions = {
     collectionName: collection._name,
+    observeChangesFilter: {},
     transform: false,
     singleValueField: false,
     pastPeriod: false,
@@ -37,7 +38,7 @@ buildAggregator = (collection, pipelineCreator, options) => function() {
   const published = {};
   const rawCollection = collection.rawCollection();
   const aggregateQuery = Meteor.wrapAsync(rawCollection.aggregate, rawCollection);
-  
+
   let ready = false;
   let interval = false;
   let oldestDocument = false;
@@ -127,7 +128,7 @@ buildAggregator = (collection, pipelineCreator, options) => function() {
     }
   };
 
-  const handle = collection.find({}).observeChanges({
+  const handle = collection.find(currentOptions.observeChangesFilter).observeChanges({
     added(id, doc) {
       if (!ready) {
         return;
