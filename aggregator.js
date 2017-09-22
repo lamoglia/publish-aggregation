@@ -1,7 +1,7 @@
 import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
 import { check } from 'meteor/check';
-import { _ } from 'underscore';
+import { _ } from 'lodash';
 import sum from 'hash-sum';
 
 const getOid = (hashToOidMap, doc) => {
