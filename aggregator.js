@@ -13,9 +13,11 @@ const getOid = (hashToOidMap, doc) => {
 };
 
 const getPipelineMatchStage = (pipeline) => {
-  const matchStages = pipeline.filter((stage) => stage.hasOwnProperty('$match'));
-  if (matchStages.length) {
-    return matchStages[0];
+  if (pipeline) {
+    const matchStages = pipeline.filter((stage) => stage.hasOwnProperty('$match'));
+    if (matchStages.length) {
+      return matchStages[0];
+    }
   }
   return false;
 };
@@ -30,12 +32,14 @@ buildAggregator = (collection, pipelineCreator, options) => function() {
     singleValueField: false,
     pastPeriod: false,
     rateLimitMillis: 500,
+    republishOnChange: false,
   };
   const currentOptions = _.assign(defaultOptions, options);
 
-  const pipeline = pipelineCreator();
-  const hashToOidMap = {};
-  const published = {};
+  let pipeline = pipelineCreator();
+  let hashToOidMap = {};
+  let published = {};
+  let updateHandle = false;
   const rawCollection = collection.rawCollection();
   const aggregateQuery = Meteor.wrapAsync(rawCollection.aggregate, rawCollection);
 
@@ -44,11 +48,21 @@ buildAggregator = (collection, pipelineCreator, options) => function() {
   let oldestDocument = false;
   let matchStage = false;
 
+  const unpublishAll = () => {
+    Object.keys(published).forEach((oid) => {
+      self.removed(currentOptions.collectionName, oid);
+    });
+    published = {};
+    hashToOidMap = {};
+  };
+
   if (currentOptions.pastPeriod) {
-    matchStage = getPipelineMatchStage(pipeline);
-    if (!matchStage) {
-      pipeline.splice(0, 0, { $match: { } });
+    if (pipeline) {
       matchStage = getPipelineMatchStage(pipeline);
+      if (!matchStage) {
+        pipeline.splice(0, 0, { $match: { } });
+        matchStage = getPipelineMatchStage(pipeline);
+      }
     }
   }
 
@@ -57,6 +71,9 @@ buildAggregator = (collection, pipelineCreator, options) => function() {
   }
 
   let update = () => {
+    if (!pipeline) {
+      return;
+    }
     const { collectionName, transform, pastPeriod, singleValueField } = currentOptions;
 
     if (pastPeriod) {
@@ -128,6 +145,31 @@ buildAggregator = (collection, pipelineCreator, options) => function() {
     }
   };
 
+  const updatePipeline = () => {
+    if (interval) {
+      Meteor.clearInterval(interval);
+      interval = false;
+    }
+    unpublishAll();
+    pipeline = pipelineCreator();
+    update();
+    updateTimeout();
+  };
+
+  if(currentOptions.republishOnChange){
+    updateHandle = currentOptions.republishOnChange.apply(this).observeChanges({
+      added() {
+        updatePipeline();
+      },
+      removed() {
+        updatePipeline();
+      },
+      changed() {
+        updatePipeline();
+      },
+    });
+  }
+
   const handle = collection.find(currentOptions.observeChangesFilter).observeChanges({
     added(id, doc) {
       if (!ready) {
@@ -161,6 +203,9 @@ buildAggregator = (collection, pipelineCreator, options) => function() {
   self.onStop(() => {
     if (interval) {
       Meteor.clearInterval(interval);
+    }
+    if (updateHandle) {
+      updateHandle.stop();
     }
     handle.stop();
   });
