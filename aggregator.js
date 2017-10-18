@@ -56,16 +56,6 @@ buildAggregator = (collection, pipelineCreator, options) => function() {
     hashToOidMap = {};
   };
 
-  if (currentOptions.pastPeriod) {
-    if (pipeline) {
-      matchStage = getPipelineMatchStage(pipeline);
-      if (!matchStage) {
-        pipeline.splice(0, 0, { $match: { } });
-        matchStage = getPipelineMatchStage(pipeline);
-      }
-    }
-  }
-
   if (!currentOptions.singleValueField && Object.keys(pipeline.$group).length === 2) {
     currentOptions.singleValueField = Object.keys(pipeline.$group).filter(k => k !== '_id')[0];
   }
@@ -152,8 +142,20 @@ buildAggregator = (collection, pipelineCreator, options) => function() {
     }
     unpublishAll();
     pipeline = pipelineCreator();
+    if (currentOptions.pastPeriod) {
+      if (pipeline) {
+        matchStage = getPipelineMatchStage(pipeline);
+        if (!matchStage) {
+          pipeline.splice(0, 0, { $match: { } });
+          matchStage = getPipelineMatchStage(pipeline);
+        }
+      }
+    }
+
     update();
-    updateTimeout();
+    if (currentOptions.pastPeriod) {
+      updateTimeout();
+    }
   };
 
   if(currentOptions.republishOnChange){
@@ -191,11 +193,7 @@ buildAggregator = (collection, pipelineCreator, options) => function() {
     },
   });
 
-  update();
-
-  if (currentOptions.pastPeriod) {
-    updateTimeout();
-  }
+  updatePipeline();
 
   self.ready();
   ready = true;
