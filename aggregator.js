@@ -109,7 +109,7 @@ buildAggregator = (collection, pipelineCreator, options) => function() {
 
   const updateTimeout = () => {
     const currentTime = new Date();
-    const query = {};
+    const query = matchStage.$match || {};
     const queryOptions = {
       limit: 1,
       fields: {},

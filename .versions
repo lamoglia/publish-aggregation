@@ -4,7 +4,7 @@ ecmascript@0.8.3
 ecmascript-runtime@0.4.1
 ecmascript-runtime-client@0.4.3
 ecmascript-runtime-server@0.4.1
-lamoglia:publish-aggregation@0.0.7
+lamoglia:publish-aggregation@0.0.8
 meteor@1.7.2
 modules@0.10.0
 modules-runtime@0.8.0
