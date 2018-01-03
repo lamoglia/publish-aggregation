@@ -39,7 +39,7 @@ Now your Mini Mongo will receive live updates from the server with your aggregat
 #### Options
 
 The `options` object has the following properties:
-
+- **observeChangesFilter**: *Function* - Optional function which returns a query to be executed against the provided **collection** to restrict the amount of data being observed, reducing memory footprint and avoiding indefinite increase of memory consumption.
 - **collectionName**: *String* - The name of the collection under which the results will appear on MiniMongo. If not set, it will default to the provided collection name.
 - **transform**: *Function* - Transformation function that receives each document from the aggregation result and outputs a reshaped object. Set false if no transformation is required.
 - **singleValueField**: *String* - If you are publishing a result with a single changing field like a count or sum, provide the name of this field for improved performance: changes will be published only if this specific field is modified. If your aggregation pipeline returns only one field other than the aggregation _id, it will be used by default.
